@@ -124,7 +124,7 @@ export async function POST(request: Request) {
     queries.push(sql`
       INSERT INTO submissions (id, phone, name, dob, gender, city, is_jain, is_jito_member, remarks, source, in_latest_csv)
       VALUES (${id}, ${phone}, ${row.name}, ${dob}::date, ${row.gender}, ${row.city},
-              ${row.jain}, ${isJito}, ${row.remark}, 'csv', true)
+              ${row.jain}, ${isJito}, ${row.remark}, 'csv', false)
     `);
   }
 
@@ -219,11 +219,12 @@ export async function POST(request: Request) {
   // Count data queries before injecting color-state queries
   const dataQueryCount = queries.length;
 
-  // ── Color state (always inside transaction, atomic rollback on failure) ──────
-  // Reset ALL creators to not-in-latest-csv first, then mark phones in this CSV
-  queries.unshift(sql`UPDATE submissions SET in_latest_csv = false`);
+  // ── Color state: mark existing creators as matched (permanent, never reset) ──
+  // New CSV creators start RED (in_latest_csv=false). Only existing creators
+  // that appear in this CSV transition to GREEN (in_latest_csv=true). Once green,
+  // never reverted — creators absent from this CSV keep their current state.
   for (const [phone] of latestCreatorRow) {
-    if (!phoneToSubId.has(phone)) continue; // new creators already inserted with in_latest_csv=true
+    if (!phoneToSubId.has(phone)) continue; // new creators start RED
     const subId = phoneToSubId.get(phone)!;
     queries.push(sql`UPDATE submissions SET in_latest_csv = true WHERE id = ${subId}`);
   }
