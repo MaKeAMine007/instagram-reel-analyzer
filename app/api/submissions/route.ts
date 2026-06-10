@@ -87,6 +87,7 @@ export async function GET() {
         marks: row.marks ?? 0,
         remarks: row.remarks ?? "",
         week: row.week ?? 1,
+        submittedAt: row.submitted_at ?? null,
       });
     }
   }
@@ -124,20 +125,26 @@ export async function POST(request: Request) {
 
   // Campaign rules — fail open if table not yet initialised
   try {
-    const campaignRows = await sql`SELECT status, active_week FROM campaign_settings WHERE id = 1`;
+    const campaignRows = await sql`SELECT status, open_weeks FROM campaign_settings WHERE id = 1`;
     if (campaignRows.length > 0) {
       const cfg = campaignRows[0];
       if (cfg.status !== "active") {
         return Response.json({ error: "Campaign is currently closed." }, { status: 403 });
       }
-      const activeWeek = Number(cfg.active_week);
-      if (week !== activeWeek) {
+      let openWeeks: number[] = [1];
+      try {
+        const parsed = JSON.parse(cfg.open_weeks || "[1]");
+        if (Array.isArray(parsed)) openWeeks = parsed as number[];
+      } catch {
+        // malformed — default to [1]
+      }
+      if (!openWeeks.includes(week)) {
         return Response.json(
-          { error: `Only Week ${activeWeek} is currently open for submissions.` },
+          { error: `Week ${week} is not currently open for submissions.` },
           { status: 400 }
         );
       }
-      if (activeWeek > 1) {
+      if (week > 1) {
         const [{ count: w1count }] = await sql`
           SELECT COUNT(*) AS count
           FROM reels r

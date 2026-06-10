@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import AdminNavbar from "@/app/components/AdminNavbar";
 import { type Creator, type ReelResult } from "@/app/lib/submissions";
-import { formatNumber } from "@/app/lib/formatters";
+import { formatNumber, formatSubmittedAt } from "@/app/lib/formatters";
 import type { ParsedRow } from "@/app/api/import/route";
 
 // ── CSV helpers ──────────────────────────────────────────────────────────────
@@ -670,6 +670,14 @@ export default function Dashboard() {
                                   <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                     Week {week}
                                   </span>
+                                  {weekReels[0]?.submittedAt && (
+                                    <>
+                                      <span className="text-xs text-gray-300">·</span>
+                                      <span className="text-xs text-gray-400 whitespace-nowrap">
+                                        Submitted On: {formatSubmittedAt(weekReels[0].submittedAt)}
+                                      </span>
+                                    </>
+                                  )}
                                   <span className="text-xs text-gray-400 whitespace-nowrap">
                                     {weekReels.length} reel{weekReels.length !== 1 ? "s" : ""}
                                   </span>

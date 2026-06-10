@@ -12,6 +12,7 @@ export interface ReelResult {
   marks?: number;
   remarks?: string;
   week?: number;
+  submittedAt?: string | null;
 }
 
 export interface Creator {

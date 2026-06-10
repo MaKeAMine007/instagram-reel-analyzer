@@ -52,7 +52,7 @@ export default function FormPage() {
     confirmed: false,
   });
   const [campaignStatus, setCampaignStatus] = useState<"loading" | "active" | "inactive">("loading");
-  const [activeWeek, setActiveWeek]         = useState<number | null>(null);
+  const [openWeeks, setOpenWeeks]           = useState<number[] | null>(null);
   const [occupiedWeeks, setOccupiedWeeks]   = useState<number[]>([]);
   const [verifyStatus, setVerifyStatus]     = useState<"idle" | "loading" | "found" | "not-found">("idle");
   const [errors, setErrors]                 = useState<Record<string, string>>({});
@@ -62,10 +62,9 @@ export default function FormPage() {
   useEffect(() => {
     fetch("/api/campaign")
       .then((r) => r.json())
-      .then((d: { status: string; activeWeek: number }) => {
+      .then((d: { status: string; openWeeks: number[] }) => {
         setCampaignStatus(d.status as "active" | "inactive");
-        setActiveWeek(d.activeWeek);
-        setForm((f) => ({ ...f, week: d.activeWeek }));
+        setOpenWeeks(d.openWeeks ?? []);
       })
       .catch(() => {
         // fail open — backend is the authority
@@ -463,17 +462,12 @@ export default function FormPage() {
                 >
                   <option value="" disabled>Select a week</option>
                   {[1, 2, 3, 4, 5].map((w) => {
-                    const isActive   = activeWeek === null || w === activeWeek;
+                    const isOpen     = openWeeks === null || openWeeks.includes(w);
                     const isOccupied = occupiedWeeks.includes(w);
-                    // eligibility: unknown until verified, so only block after verify
-                    const ineligible =
-                      verifyStatus !== "idle" &&
-                      activeWeek !== null &&
-                      activeWeek > 1 &&
-                      !occupiedWeeks.includes(1) &&
-                      w === activeWeek;
-                    const isDisabled = !isActive || isOccupied || ineligible;
-                    const label      = isOccupied ? `Week ${w} 🔒` : `Week ${w}`;
+                    const hasWeek1   = occupiedWeeks.includes(1);
+                    const needsWeek1 = w > 1 && verifyStatus !== "idle" && !hasWeek1;
+                    const isDisabled = !isOpen || isOccupied || needsWeek1;
+                    const label      = isOccupied ? `Week ${w} 🔒` : !isOpen ? `Week ${w} (closed)` : `Week ${w}`;
                     return (
                       <option key={w} value={w} disabled={isDisabled}>
                         {label}
@@ -482,9 +476,9 @@ export default function FormPage() {
                   })}
                 </select>
                 {errors.week && <p className="text-xs text-red-500 mt-1">{errors.week}</p>}
-                {verifyStatus !== "idle" && activeWeek !== null && activeWeek > 1 && !occupiedWeeks.includes(1) && (
+                {verifyStatus !== "idle" && !occupiedWeeks.includes(1) && (openWeeks === null || openWeeks.some((w) => w > 1)) && (
                   <p className="text-xs text-red-500 mt-1">
-                    Week 1 has not been submitted. Participation in Week {activeWeek} requires completing Week 1 first.
+                    Week 1 has not been submitted. Future weeks require completing Week 1 first.
                   </p>
                 )}
               </div>

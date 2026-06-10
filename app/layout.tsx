@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Reel Tank",
+  title: "JYCC Reel Tank",
   description: "Submit your Instagram Reels for campaign evaluation.",
 };
 
