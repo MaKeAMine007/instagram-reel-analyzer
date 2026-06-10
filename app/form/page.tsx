@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PublicNavbar from "@/app/components/PublicNavbar";
 
 type Gender = "Male" | "Female" | "Other" | "";
@@ -13,7 +13,7 @@ interface FormData {
   isJain: boolean | null;
   isJitoMember: boolean | null;
   week: number | null;
-  reelUrls: string[];
+  reelUrl: string;
   confirmed: boolean;
 }
 
@@ -48,25 +48,68 @@ export default function FormPage() {
     isJain: null,
     isJitoMember: null,
     week: null,
-    reelUrls: [""],
+    reelUrl: "",
     confirmed: false,
   });
-  const [errors, setErrors]       = useState<Record<string, string>>({});
-  const [loading, setLoading]     = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [campaignStatus, setCampaignStatus] = useState<"loading" | "active" | "inactive">("loading");
+  const [activeWeek, setActiveWeek]         = useState<number | null>(null);
+  const [occupiedWeeks, setOccupiedWeeks]   = useState<number[]>([]);
+  const [verifyStatus, setVerifyStatus]     = useState<"idle" | "loading" | "found" | "not-found">("idle");
+  const [errors, setErrors]                 = useState<Record<string, string>>({});
+  const [loading, setLoading]               = useState(false);
+  const [submitted, setSubmitted]           = useState(false);
 
-  function addReel() {
-    setForm((f) => ({ ...f, reelUrls: [...f.reelUrls, ""] }));
-  }
-  function removeReel(idx: number) {
-    setForm((f) => ({ ...f, reelUrls: f.reelUrls.filter((_, i) => i !== idx) }));
-  }
-  function updateReel(idx: number, val: string) {
-    setForm((f) => {
-      const urls = [...f.reelUrls];
-      urls[idx] = val;
-      return { ...f, reelUrls: urls };
-    });
+  useEffect(() => {
+    fetch("/api/campaign")
+      .then((r) => r.json())
+      .then((d: { status: string; activeWeek: number }) => {
+        setCampaignStatus(d.status as "active" | "inactive");
+        setActiveWeek(d.activeWeek);
+        setForm((f) => ({ ...f, week: d.activeWeek }));
+      })
+      .catch(() => {
+        // fail open — backend is the authority
+        setCampaignStatus("active");
+      });
+  }, []);
+
+  async function handleVerify() {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length !== 10) return;
+    setVerifyStatus("loading");
+    try {
+      const res  = await fetch(`/api/submissions/weeks?phone=${encodeURIComponent(digits)}`);
+      const data = await res.json() as {
+        exists: boolean;
+        occupiedWeeks: number[];
+        name?: string;
+        gender?: string;
+        dob?: string;
+        city?: string;
+        isJain?: boolean | null;
+        isJitoMember?: boolean | null;
+      };
+      const weeks = data.occupiedWeeks ?? [];
+      setOccupiedWeeks(weeks);
+      if (data.exists) {
+        setForm((f) => ({
+          ...f,
+          name:         data.name         ?? f.name,
+          gender:       (data.gender as Gender) ?? f.gender,
+          dob:          data.dob          ?? f.dob,
+          city:         data.city         ?? f.city,
+          isJain:       data.isJain       !== undefined ? (data.isJain       ?? null) : f.isJain,
+          isJitoMember: data.isJitoMember !== undefined ? (data.isJitoMember ?? null) : f.isJitoMember,
+          week:         f.week !== null && weeks.includes(f.week) ? null : f.week,
+        }));
+        setVerifyStatus("found");
+      } else {
+        setVerifyStatus("not-found");
+      }
+    } catch {
+      setOccupiedWeeks([]);
+      setVerifyStatus("idle");
+    }
   }
 
   function validate(): boolean {
@@ -84,13 +127,11 @@ export default function FormPage() {
     if (form.isJain === null) e.isJain = "Please select an option.";
     if (form.isJain === true && form.isJitoMember === null) e.isJitoMember = "Please select an option.";
     if (form.week === null) e.week = "Please select a week.";
-    form.reelUrls.forEach((url, i) => {
-      if (!url.trim()) {
-        e[`reel_${i}`] = "This field is required.";
-      } else if (!isValidReelUrl(url.trim())) {
-        e[`reel_${i}`] = "Enter a valid Instagram Reel URL.";
-      }
-    });
+    if (!form.reelUrl.trim()) {
+      e.reelUrl = "This field is required.";
+    } else if (!isValidReelUrl(form.reelUrl.trim())) {
+      e.reelUrl = "Enter a valid Instagram Reel URL.";
+    }
     if (!form.confirmed) e.confirmed = "Please confirm the declaration.";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -154,7 +195,7 @@ export default function FormPage() {
           isJain:        form.isJain,
           isJitoMember:  form.isJain === true ? form.isJitoMember : null,
           week:          form.week,
-          reelUrls:      form.reelUrls,
+          reelUrls:      [form.reelUrl],
         }),
       });
       if (!res.ok) {
@@ -172,6 +213,22 @@ export default function FormPage() {
       setErrors({ form: "Network error. Please try again." });
       setLoading(false);
     }
+  }
+
+  if (campaignStatus === "inactive") {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <PublicNavbar />
+        <main className="flex items-center justify-center px-4 py-20">
+          <div className="bg-white border border-gray-200 rounded-lg p-10 max-w-sm w-full text-center">
+            <h2 className="text-base font-semibold text-gray-900 mb-2">Campaign Closed</h2>
+            <p className="text-sm text-gray-500">
+              Campaign is currently closed. Please check back later.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   if (submitted) {
@@ -231,11 +288,32 @@ export default function FormPage() {
                     <input
                       type="tel"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setPhone(val);
+                        if (verifyStatus !== "idle") {
+                          setVerifyStatus("idle");
+                          setOccupiedWeeks([]);
+                        }
+                      }}
                       placeholder="98765 43210"
                       className={`flex-1 ${fieldClass(errors.phone)}`}
                     />
+                    <button
+                      type="button"
+                      onClick={handleVerify}
+                      disabled={phone.replace(/\D/g, "").length !== 10 || verifyStatus === "loading"}
+                      className="shrink-0 border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed rounded-md px-3 text-sm font-medium transition-colors"
+                    >
+                      {verifyStatus === "loading" ? "Verifying…" : "Verify"}
+                    </button>
                   </div>
+                  {verifyStatus === "found" && (
+                    <p className="text-xs text-green-600 mt-1">✓ Creator found · Details pre-filled</p>
+                  )}
+                  {verifyStatus === "not-found" && (
+                    <p className="text-xs text-gray-500 mt-1">New creator</p>
+                  )}
                   {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                 </div>
 
@@ -384,50 +462,44 @@ export default function FormPage() {
                   } ${form.week === null ? "text-gray-400" : "text-gray-900"}`}
                 >
                   <option value="" disabled>Select a week</option>
-                  <option value="1">Week 1</option>
-                  <option value="2">Week 2</option>
-                  <option value="3">Week 3</option>
-                  <option value="4">Week 4</option>
-                  <option value="5">Week 5</option>
+                  {[1, 2, 3, 4, 5].map((w) => {
+                    const isActive   = activeWeek === null || w === activeWeek;
+                    const isOccupied = occupiedWeeks.includes(w);
+                    // eligibility: unknown until verified, so only block after verify
+                    const ineligible =
+                      verifyStatus !== "idle" &&
+                      activeWeek !== null &&
+                      activeWeek > 1 &&
+                      !occupiedWeeks.includes(1) &&
+                      w === activeWeek;
+                    const isDisabled = !isActive || isOccupied || ineligible;
+                    const label      = isOccupied ? `Week ${w} 🔒` : `Week ${w}`;
+                    return (
+                      <option key={w} value={w} disabled={isDisabled}>
+                        {label}
+                      </option>
+                    );
+                  })}
                 </select>
                 {errors.week && <p className="text-xs text-red-500 mt-1">{errors.week}</p>}
+                {verifyStatus !== "idle" && activeWeek !== null && activeWeek > 1 && !occupiedWeeks.includes(1) && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Week 1 has not been submitted. Participation in Week {activeWeek} requires completing Week 1 first.
+                  </p>
+                )}
               </div>
 
-              <div className="space-y-3">
-                {form.reelUrls.map((url, idx) => (
-                  <div key={idx}>
-                    <div className="flex gap-2">
-                      <input
-                        type="url"
-                        value={url}
-                        onChange={(e) => updateReel(idx, e.target.value)}
-                        placeholder="https://www.instagram.com/reel/..."
-                        className={`flex-1 ${fieldClass(errors[`reel_${idx}`])}`}
-                      />
-                      {form.reelUrls.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeReel(idx)}
-                          aria-label="Remove"
-                          className="shrink-0 border border-gray-300 bg-white text-gray-500 hover:text-gray-800 hover:border-gray-400 rounded-md px-3 text-sm transition-colors"
-                        >
-                          ✕
-                        </button>
-                      )}
-                    </div>
-                    {errors[`reel_${idx}`] && (
-                      <p className="text-xs text-red-500 mt-1">{errors[`reel_${idx}`]}</p>
-                    )}
-                  </div>
-                ))}
-
-                <button
-                  type="button"
-                  onClick={addReel}
-                  className="text-sm text-gray-600 border border-gray-300 bg-white rounded-md px-4 py-2 hover:bg-gray-50 transition-colors"
-                >
-                  + Add another reel
-                </button>
+              <div>
+                <input
+                  type="url"
+                  value={form.reelUrl}
+                  onChange={(e) => setForm((f) => ({ ...f, reelUrl: e.target.value }))}
+                  placeholder="https://www.instagram.com/reel/..."
+                  className={fieldClass(errors.reelUrl)}
+                />
+                {errors.reelUrl && (
+                  <p className="text-xs text-red-500 mt-1">{errors.reelUrl}</p>
+                )}
               </div>
             </div>
 

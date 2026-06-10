@@ -331,6 +331,31 @@ export default function Dashboard() {
       return;
     }
 
+    // Validate (phone, week) uniqueness before any DB operation
+    const seen = new Set<string>();
+    const dupSlots: { phone: string; week: number }[] = [];
+    const reported = new Set<string>();
+    for (const row of rows) {
+      if (!row.reelUrl) continue;
+      const key = `${row.phone}|${row.week}`;
+      if (seen.has(key)) {
+        if (!reported.has(key)) {
+          dupSlots.push({ phone: row.phone, week: row.week });
+          reported.add(key);
+        }
+      } else {
+        seen.add(key);
+      }
+    }
+    if (dupSlots.length > 0) {
+      const lines = dupSlots.map(d => `• Phone: +91 ${d.phone} — Week ${d.week}`).join("\n");
+      setImportError(
+        `CSV Validation Failed\n\nOnly one reel is allowed per creator per week.\n\nDuplicate entries found:\n\n${lines}\n\nPlease correct the CSV and try again.`
+      );
+      setImportStage("error");
+      return;
+    }
+
     setPendingRows(rows);
     setImportStage("previewing");
     setImportError(null);
@@ -477,6 +502,12 @@ export default function Dashboard() {
               className="text-sm font-medium text-gray-600 border border-gray-300 bg-white rounded-md px-4 py-2 hover:bg-gray-50 transition-colors"
             >
               Open Registration Form
+            </a>
+            <a
+              href="/campaign"
+              className="text-sm font-medium text-gray-600 border border-gray-300 bg-white rounded-md px-4 py-2 hover:bg-gray-50 transition-colors"
+            >
+              Campaign Control
             </a>
             <button
               onClick={reload}

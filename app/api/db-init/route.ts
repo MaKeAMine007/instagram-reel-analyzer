@@ -44,5 +44,18 @@ export async function GET() {
   await sql`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'form'`;
   await sql`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS in_latest_csv BOOLEAN NOT NULL DEFAULT false`;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS campaign_settings (
+      id           INT PRIMARY KEY,
+      status       TEXT NOT NULL DEFAULT 'active',
+      active_week  INT  NOT NULL DEFAULT 1
+    )
+  `;
+  await sql`
+    INSERT INTO campaign_settings (id, status, active_week)
+    VALUES (1, 'active', 1)
+    ON CONFLICT (id) DO NOTHING
+  `;
+
   return Response.json({ ok: true, message: "Schema initialized" });
 }

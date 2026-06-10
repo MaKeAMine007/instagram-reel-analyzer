@@ -118,6 +118,57 @@ export async function POST(request: Request) {
     return Response.json({ error: "week must be an integer between 1 and 5" }, { status: 400 });
   }
 
+  if (reelUrls.length > 1) {
+    return Response.json({ error: "Only one reel is allowed per week." }, { status: 400 });
+  }
+
+  // Campaign rules — fail open if table not yet initialised
+  try {
+    const campaignRows = await sql`SELECT status, active_week FROM campaign_settings WHERE id = 1`;
+    if (campaignRows.length > 0) {
+      const cfg = campaignRows[0];
+      if (cfg.status !== "active") {
+        return Response.json({ error: "Campaign is currently closed." }, { status: 403 });
+      }
+      const activeWeek = Number(cfg.active_week);
+      if (week !== activeWeek) {
+        return Response.json(
+          { error: `Only Week ${activeWeek} is currently open for submissions.` },
+          { status: 400 }
+        );
+      }
+      if (activeWeek > 1) {
+        const [{ count: w1count }] = await sql`
+          SELECT COUNT(*) AS count
+          FROM reels r
+          JOIN submissions s ON r.submission_id = s.id
+          WHERE s.phone = ${phone} AND r.week = 1
+        `;
+        if (Number(w1count) === 0) {
+          return Response.json(
+            { error: "Week 1 must be submitted before participating in later weeks." },
+            { status: 400 }
+          );
+        }
+      }
+    }
+  } catch {
+    // campaign_settings table doesn't exist yet — skip checks, backend safety still applies
+  }
+
+  const [{ count }] = await sql`
+    SELECT COUNT(*) AS count
+    FROM reels r
+    JOIN submissions s ON r.submission_id = s.id
+    WHERE s.phone = ${phone} AND r.week = ${week}
+  `;
+  if (Number(count) > 0) {
+    return Response.json(
+      { error: `Week ${week} already contains a reel. Only one reel is allowed per week.` },
+      { status: 409 }
+    );
+  }
+
   const [submission] = await sql`
     INSERT INTO submissions (phone, name, dob, gender, city, is_jain, is_jito_member, source, in_latest_csv)
     VALUES (${phone}, ${name}, ${dob}, ${gender}, ${city}, ${isJain ?? null}, ${isJitoMember}, 'form', false)

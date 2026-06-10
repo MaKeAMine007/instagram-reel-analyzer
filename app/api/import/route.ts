@@ -49,10 +49,13 @@ export async function POST(request: Request) {
     SELECT r.id, s.phone, r.url, r.week::int AS week
     FROM reels r
     JOIN submissions s ON r.submission_id = s.id
+    ORDER BY r.reel_index ASC
   `;
-  const reelFp = new Map<string, string>(); // "phone|week|url" → reel id
+  // Key: "phone|week" → first (oldest) reel id for that slot
+  const weekSlot = new Map<string, string>();
   for (const r of existingReelRows) {
-    reelFp.set(`${r.phone}|${r.week}|${r.url}`, String(r.id));
+    const key = `${r.phone}|${r.week}`;
+    if (!weekSlot.has(key)) weekSlot.set(key, String(r.id));
   }
 
   const maxIdxRows = await sql`
@@ -85,8 +88,8 @@ export async function POST(request: Request) {
 
   for (const row of rows) {
     if (!row.reelUrl) continue;
-    const fp = `${row.phone}|${row.week}|${row.reelUrl}`;
-    if (reelFp.has(fp)) reelsToUpdate++;
+    const slot = `${row.phone}|${row.week}`;
+    if (weekSlot.has(slot)) reelsToUpdate++;
     else reelsToCreate++;
   }
 
@@ -164,10 +167,13 @@ export async function POST(request: Request) {
   }
 
   // Reel INSERTs (new reels for all creators)
+  const filledSlots = new Set<string>(); // slots queued for insert in this batch
   for (const row of rows) {
     if (!row.reelUrl) continue;
-    const fp = `${row.phone}|${row.week}|${row.reelUrl}`;
-    if (reelFp.has(fp)) continue; // will be updated below
+    const slot = `${row.phone}|${row.week}`;
+    if (weekSlot.has(slot)) continue; // slot occupied in DB — skip insert (merge updates below)
+    if (filledSlots.has(slot)) continue; // already inserting this slot in batch
+    filledSlots.add(slot);
 
     const subId  = newSubIds.get(row.phone) ?? phoneToSubId.get(row.phone)!;
     const idx    = idxCounter.get(subId) ?? 0;
@@ -196,16 +202,18 @@ export async function POST(request: Request) {
   }
 
   // Reel UPDATEs (merge mode only)
+  // Updates the existing reel for the week slot regardless of URL change.
   if (mode === "merge") {
     for (const row of rows) {
       if (!row.reelUrl) continue;
-      const fp = `${row.phone}|${row.week}|${row.reelUrl}`;
-      if (!reelFp.has(fp)) continue;
+      const slot = `${row.phone}|${row.week}`;
+      if (!weekSlot.has(slot)) continue; // new slot, was inserted above
 
-      const reelId = reelFp.get(fp)!;
+      const reelId = weekSlot.get(slot)!;
       queries.push(sql`
         UPDATE reels
-        SET username = ${row.username ?? null},
+        SET url      = ${row.reelUrl},
+            username = ${row.username ?? null},
             status   = ${row.status   ?? "done"},
             views    = ${row.views    ?? null},
             likes    = ${row.likes    ?? null},
