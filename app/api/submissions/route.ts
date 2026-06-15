@@ -13,6 +13,7 @@ export async function GET() {
       s.is_jito_member,
       s.submitted_at,
       s.remarks            AS submission_remarks,
+      s.verification_status,
       s.source,
       s.in_latest_csv,
       r.id                 AS reel_id,
@@ -27,7 +28,8 @@ export async function GET() {
       r.marks,
       r.remarks,
       r.reel_index,
-      r.week
+      r.week,
+      r.verification_status AS reel_verification_status
     FROM submissions s
     LEFT JOIN reels r ON r.submission_id = s.id
     ORDER BY s.submitted_at ASC, r.reel_index ASC
@@ -44,6 +46,7 @@ export async function GET() {
     firstSubmittedAt: string;
     firstSubmissionId: string;
     remarks: string;
+    verificationStatus: string;
     source: string;
     inLatestCsv: boolean;
     reelUrls: string[];
@@ -64,6 +67,7 @@ export async function GET() {
         firstSubmittedAt: row.submitted_at,
         firstSubmissionId: row.id,
         remarks: row.submission_remarks ?? "",
+        verificationStatus: row.verification_status ?? "-",
         source: row.source ?? "form",
         inLatestCsv: row.in_latest_csv ?? false,
         reelUrls: [],
@@ -88,6 +92,7 @@ export async function GET() {
         remarks: row.remarks ?? "",
         week: row.week ?? 1,
         submittedAt: row.submitted_at ?? null,
+        verificationStatus: row.reel_verification_status ?? "-",
       });
     }
   }

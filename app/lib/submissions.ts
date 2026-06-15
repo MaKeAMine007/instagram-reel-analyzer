@@ -13,6 +13,7 @@ export interface ReelResult {
   remarks?: string;
   week?: number;
   submittedAt?: string | null;
+  verificationStatus?: string;
 }
 
 export interface Creator {
@@ -26,6 +27,7 @@ export interface Creator {
   firstSubmittedAt: string;
   firstSubmissionId: string;
   remarks: string;
+  verificationStatus: string;
   source: string;
   inLatestCsv: boolean;
   reelUrls: string[];
