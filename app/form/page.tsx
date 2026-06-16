@@ -270,6 +270,52 @@ export default function FormPage() {
 
           <form onSubmit={handleSubmit} noValidate>
 
+            {/* ── Challenge Guidelines ─────────────────────────────── */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 mb-4">
+              <h2 className="text-sm font-semibold text-gray-800 mb-4">✨ Reel Tank Challenge Guidelines ✨</h2>
+
+              <div className="space-y-3 mb-5">
+                <div className="flex gap-3">
+                  <span className="text-base leading-snug">🎬</span>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    Choose any three topics from the Reel Tank topic list provided in the PDF and bring your creativity to life!
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <span className="text-base leading-snug">📅</span>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    <span className="font-semibold text-gray-800">Important Deadline:</span> All reel submissions, uploads, and collaboration requests must be completed on or before <span className="font-semibold text-gray-800">30 June</span>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-100 pt-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">📚 Download Resources</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <a
+                    href="/reel-tank.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    className="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+                  >
+                    <span className="text-base">📄</span>
+                    Reel Tank PDF
+                  </a>
+                  <a
+                    href="/reel-tank-challenge.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    className="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+                  >
+                    <span className="text-base">📄</span>
+                    Reel Tank Challenge Guidelines
+                  </a>
+                </div>
+              </div>
+            </div>
+
             {/* ── Personal Details ─────────────────────────────────── */}
             <div className="bg-white border border-gray-200 rounded-lg p-6 mb-4">
               <h2 className="text-sm font-semibold text-gray-800 mb-4">Personal Details</h2>
