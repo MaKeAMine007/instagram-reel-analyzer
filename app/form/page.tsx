@@ -276,17 +276,41 @@ export default function FormPage() {
 
               <div className="space-y-3 mb-5">
                 <div className="flex gap-3">
-                  <span className="text-base leading-snug">🎬</span>
+                  <span className="text-base leading-snug">🚨</span>
                   <p className="text-sm text-gray-600 leading-relaxed">
-                    Choose any three topics from the Reel Tank topic list provided in the PDF and bring your creativity to life!
+                    Reel Tank Creators, This Is Your Sign! 🚨
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  <span className="text-base leading-snug">📅</span>
+                  <span className="text-base leading-snug">🎥</span>
                   <p className="text-sm text-gray-600 leading-relaxed">
-                    <span className="font-semibold text-gray-800">Important Deadline:</span> All reel submissions, uploads, and collaboration requests must be completed on or before <span className="font-semibold text-gray-800">30 June</span>.
+                    Create reels on any 3 topics (out of the 4 announced topics).
                   </p>
                 </div>
+                <div className="flex gap-3">
+                  <span className="text-base leading-snug">🤝</span>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    Don&apos;t forget to collab with us on your reel.
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <span className="text-base leading-snug">📖</span>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    Read all the instructions carefully before posting.
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <span className="text-base leading-snug">⏳</span>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    Last date for Reel Tank submissions &amp; collab requests: <span className="font-semibold text-gray-800">30th June 2026</span>.
+                  </p>
+                </div>
+                <p className="text-sm text-gray-600 leading-relaxed pt-1">
+                  This isn&apos;t just another reel. It could be your next opportunity. 👀🔥
+                </p>
+                <p className="text-sm text-gray-600 leading-relaxed font-medium">
+                  Create. Collaborate. Get Noticed. 🚀
+                </p>
               </div>
 
               <div className="border-t border-gray-100 pt-4">
