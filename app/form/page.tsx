@@ -287,12 +287,33 @@ export default function FormPage() {
                     Create reels on any 3 topics (out of the 4 announced topics).
                   </p>
                 </div>
-                <div className="flex gap-3">
-                  <span className="text-base leading-snug">🤝</span>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    Don&apos;t forget to collab with us on your reel.
-                  </p>
+
+                <div className="pt-1">
+                  <div className="flex gap-3 mb-2">
+                    <span className="text-base leading-snug">🤝</span>
+                    <p className="text-sm font-semibold text-gray-700 leading-relaxed">Collab &amp; Tagging Instructions</p>
+                  </div>
+                  <p className="text-sm text-gray-600 leading-relaxed mb-2 pl-7">Don&apos;t forget to collab your reel with:</p>
+                  <ul className="space-y-1 pl-7">
+                    <li className="text-sm text-gray-600 leading-relaxed">📌 @jito.youth</li>
+                    <li className="text-sm text-gray-600 leading-relaxed">📌 @jitonewdelhi</li>
+                    <li className="text-sm text-gray-600 leading-relaxed">📌 @safexpress</li>
+                    <li className="text-sm text-gray-600 leading-relaxed">📌 @jitoyouthchapterof[yourcity]</li>
+                  </ul>
                 </div>
+
+                <div className="pt-1">
+                  <div className="flex gap-3 mb-2">
+                    <span className="text-base leading-snug">✨</span>
+                    <p className="text-sm text-gray-600 leading-relaxed">Additionally, in at least one of your reels, tag:</p>
+                  </div>
+                  <ul className="space-y-1 pl-7">
+                    <li className="text-sm text-gray-600 leading-relaxed">📌 @houseofnayra</li>
+                    <li className="text-sm text-gray-600 leading-relaxed">📌 @mlm_india</li>
+                    <li className="text-sm text-gray-600 leading-relaxed">📌 @drppl_delhi</li>
+                  </ul>
+                </div>
+
                 <div className="flex gap-3">
                   <span className="text-base leading-snug">📖</span>
                   <p className="text-sm text-gray-600 leading-relaxed">
@@ -305,10 +326,7 @@ export default function FormPage() {
                     Last date for Reel Tank submissions &amp; collab requests: <span className="font-semibold text-gray-800">30th June 2026</span>.
                   </p>
                 </div>
-                <p className="text-sm text-gray-600 leading-relaxed pt-1">
-                  This isn&apos;t just another reel. It could be your next opportunity. 👀🔥
-                </p>
-                <p className="text-sm text-gray-600 leading-relaxed font-medium">
+                <p className="text-sm text-gray-600 leading-relaxed font-medium pt-1">
                   Create. Collaborate. Get Noticed. 🚀
                 </p>
               </div>
