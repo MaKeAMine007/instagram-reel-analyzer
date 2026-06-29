@@ -19,4 +19,9 @@ export const WEEK_TOPICS: Record<number, WeekTopic> = {
     description:
       "Choose a personality, founder, brand or company and creatively recreate/clone their lifestyle, work culture or journey.",
   },
+  4: {
+    title: "Living a Legacy 😎 / Yuva Ki Mann Ki Baat",
+    description:
+      "Choose a personality, founder, brand or company and creatively recreate/clone their lifestyle, work culture or journey.",
+  },
 };

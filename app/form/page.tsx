@@ -323,7 +323,7 @@ export default function FormPage() {
                 <div className="flex gap-3">
                   <span className="text-base leading-snug">⏳</span>
                   <p className="text-sm text-gray-600 leading-relaxed">
-                    Last date for Reel Tank submissions &amp; collab requests: <span className="font-semibold text-gray-800">30th June 2026</span>.
+                    Last date for Reel Tank submissions &amp; collab requests: <span className="font-semibold text-gray-800">4th July 2026</span>.
                   </p>
                 </div>
                 <p className="text-sm text-gray-600 leading-relaxed font-medium pt-1">
